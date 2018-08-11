@@ -60,6 +60,5 @@ fabric.properties
 .idea/httpRequests
 
 # CUSTOM RULES #
-tests
 venv
 __pycache__
