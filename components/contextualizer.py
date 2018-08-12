@@ -14,14 +14,15 @@ class Contextualizer(component.Component):
             if not member[0].startswith("_"):
                 self.__setattr__(member[0], member[1])
 
+        self._argv = self.content[len(self.config["bot"]["prefix"]):].split(" ")
+
     @property
     def is_command(self):
         return self._is_command
 
     @property
     def argv(self):
-        argv = self.content[len(self.config["bot"]["prefix"]):].split(" ")
-        return argv
+        return self._argv
 
     @property
     def cmd(self):

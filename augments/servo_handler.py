@@ -1,6 +1,5 @@
 import importlib.util
 from components import exceptions
-from components import bot
 from components import servo
 from components import subroutine
 from components import contextualizer
@@ -19,15 +18,19 @@ class ServoLoader(servo.Servo):
         "author": "Saviour#8988"
     })
     async def load_servo(self, context):
-        for subroutine_obj in self.bot.subroutines:
-            if subroutine_obj.info["name"] == "servohandler":
-                success = subroutine_obj.load_servo(context.args[0])
-                if success:
-                    await self.client.send_message(context.channel,
-                                                   "loaded servo `{}`".format(context.args[0]))
-                    return
+        if len(context.argv) <= 1:
+            await self.client.send_message(context.channel,
+                                           "no servo supplied")
+            return
+
+        servo_handler = self.bot.get_subroutine("servohandler")
+        if servo_handler:
+            if servo_handler.load_servo(context.args[0]):
                 await self.client.send_message(context.channel,
-                                               "invalid servo `{}` supplied".format(context.args[0]))
+                                               "loaded servo `{}`".format(context.args[0]))
+                return
+            await self.client.send_message(context.channel,
+                                           "invalid servo `{}` supplied".format(context.args[0]))
 
     @servo.add_command({
         "name": "unloadservo",
@@ -41,15 +44,14 @@ class ServoLoader(servo.Servo):
                                            "no servo supplied")
             return
 
-        for subroutine_obj in self.bot.subroutines:
-            if subroutine_obj.info["name"] == "servohandler":
-                success = subroutine_obj.unload_servo(context.args[0])
-                if success:
-                    await self.client.send_message(context.channel,
-                                                   "unloaded servo `{}`".format(context.args[0]))
-                    return
+        servo_handler = self.bot.get_subroutine("servohandler")
+        if servo_handler:
+            if servo_handler.unload_servo(context.args[0]):
                 await self.client.send_message(context.channel,
-                                               "invalid servo `{}` supplied".format(context.args[0]))
+                                               "unloaded servo `{}`".format(context.args[0]))
+                return
+            await self.client.send_message(context.channel,
+                                           "invalid servo `{}` supplied".format(context.args[0]))
 
     @servo.add_command({
         "name": "refreshservo",
@@ -63,15 +65,14 @@ class ServoLoader(servo.Servo):
                                            "no servo supplied")
             return
 
-        for subroutine_obj in self.bot.subroutines:
-            if subroutine_obj.info["name"] == "servohandler":
-                success = subroutine_obj.refresh_servo(context.args[0])
-                if success:
-                    await self.client.send_message(context.channel,
-                                                   "refreshed servo `{}`".format(context.args[0]))
-                    return
+        servo_handler = self.bot.get_subroutine("servohandler")
+        if servo_handler:
+            if servo_handler.refresh_servo(context.args[0]):
                 await self.client.send_message(context.channel,
-                                               "invalid servo `{}` supplied".format(context.args[0]))
+                                               "refreshed servo `{}`".format(context.args[0]))
+                return
+            await self.client.send_message(context.channel,
+                                           "invalid servo `{}` supplied".format(context.args[0]))
 
 
 @subroutine.add_subroutine({
@@ -134,6 +135,11 @@ class ServoHandler(subroutine.Subroutine):
 
     async def on_ready(self):
         self.load_servo("servoloader")
+        try:
+            self.config["bot"]["servos"]
+        except KeyError:
+            self.logger.info("no starting servos supplied. skipping...")
+            return
         for servo_name in self.config["bot"]["servos"]:
             self.logger.info("attempting to load servo {}".format(servo_name))
             try:
@@ -148,4 +154,6 @@ class ServoHandler(subroutine.Subroutine):
         if context.is_command:
             for s in self.servos:
                 if s.has_command(context.cmd):
+                    self.logger.info("user [{}] issued command [{}]".format(context.author,
+                                                                            context.cmd))
                     await s.call(context.cmd, context)

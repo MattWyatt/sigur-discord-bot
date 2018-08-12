@@ -12,10 +12,11 @@ class Bot(component.Component):
     def __init__(self, name, config=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.set_name(name)
+        logging.basicConfig(level=logging.INFO)
 
+        self.set_name(name)
         self.set_logger(self.name)
-        self.logger.info("logger started")
+        self.logger.setLevel(logging.DEBUG)
 
         # array of subroutine objects
         self.subroutines = []
@@ -24,7 +25,6 @@ class Bot(component.Component):
             self.load_config(config)
 
         self._bot = self
-        self.set_database(database.Database(inherit=self))
 
     def load_event_handlers(self):
         if not self.client:
@@ -45,8 +45,9 @@ class Bot(component.Component):
 
         # @self.client.event
         # async def on_error(event, *args, **kwargs):
-        #     for subroutine_obj in self.subroutines:
-        #         await subroutine_obj.on_error(event, *args, **kwargs)
+            # self.logger.error(event)
+            # for subroutine_obj in self.subroutines:
+                # await subroutine_obj.on_error(event, *args, **kwargs)
 
         @self.client.event
         async def on_message(message):
@@ -164,6 +165,12 @@ class Bot(component.Component):
             return
         self.set_client(client)
 
+    def load_database(self, db=None):
+        if not db:
+            self.set_database(database.Database(inherit=self))
+            return
+        self.set_database(db)
+
     def load_config(self, config):
         if type(config) is dict:
             self.set_config(config)
@@ -180,10 +187,22 @@ class Bot(component.Component):
                 logging.error("the specified configuration file is invalid")
                 raise exceptions.InvalidConfiguration
 
-    def subroutine_loaded(self, subroutine_name):
+        if self.config["bot"]["subroutines"]:
+            for subroutine_name in self.config["bot"]["subroutines"]:
+                try:
+                    self.load_subroutine(subroutine_name)
+                except exceptions.SubroutineAlreadyLoaded:
+                    pass
+
+    def get_subroutine(self, subroutine_name):
         for subroutine_obj in self.subroutines:
             if subroutine_obj.info["name"] == subroutine_name:
-                return True
+                return subroutine_obj
+        return None
+
+    def subroutine_loaded(self, subroutine_name):
+        if self.get_subroutine(subroutine_name):
+            return True
         return False
 
     def load_subroutine(self, subroutine_name):
@@ -194,12 +213,26 @@ class Bot(component.Component):
     def unload_subroutine(self, subroutine_name):
         if not self.subroutine_loaded(subroutine_name):
             raise exceptions.SubroutineNotLoaded
-        for subroutine_obj in self.subroutines:
-            if subroutine_obj.info["name"] == subroutine_name:
-                self.subroutines.remove(subroutine_obj)
+        subroutine_obj = self.get_subroutine(subroutine_name)
+        self.subroutines.remove(subroutine_obj)
 
     def start(self):
         self.logger.info("the bot is starting...")
         if not self.client:
-            self.load_client()
+            self.logger.error("bot attempted to start without client")
+            raise exceptions.ClientNotLoaded
+
+        # load event handlers as soon as we know the client exists
+        self.load_event_handlers()
+
+        if not self.database:
+            self.logger.warn("bot starting without db file, defaulting to memory")
+            self.set_database(database.Database(inherit=self, in_memory=True))
+        try:
+            for subroutine_name in self.config["bot"]["subroutines"]:
+                self.load_subroutine(subroutine_name)
+        except exceptions.SubroutineAlreadyLoaded:
+            self.logger.warn("duplicate subroutines in configuration file")
+        except KeyError:
+            self.logger.warn("no default subroutines supplied. skipping...")
         self.client.run(self.config["bot"]["token"])

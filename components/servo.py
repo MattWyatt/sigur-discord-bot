@@ -26,6 +26,7 @@ def add_servo(servo_information):
 
             def __init__(self, *args):
                 self.wrapped_servo = new_servo(*args)
+                self.wrapped_servo.info = servo_information
 
             def __getattr__(self, name):
                 return getattr(self.wrapped_servo, name)
@@ -109,3 +110,16 @@ class Servo(component.Component):
                         await self.client.send_message(context.channel,
                                                        "you may not perform this command")
         return success
+
+
+class GroupedServo(Servo):
+    def has_command(self, command):
+        return command == self.info["name"].lower()
+
+    async def call(self, command_name, context):
+        # the real command will be context.args[0] while the prefix will be command_name
+        # so we've got to extract that
+        command_name = context.args[0]
+        context._argv.pop(1)
+        self.logger.debug("attempting to call command [{}]...".format(command_name))
+        await Servo.call(self, command_name, context)

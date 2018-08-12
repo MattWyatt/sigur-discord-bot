@@ -11,6 +11,10 @@ def get_and_validate_user(context):
     return
 
 
+def check_role_hierarchy(user1, user2):
+    return user1.top_role > user2.top_role
+
+
 @servo.add_servo({
     "name": "admin",
     "description": "administrative commands to manage a server",
@@ -28,6 +32,10 @@ class Admin(servo.Servo):
         if not kick_member:
             await self.client.send_message(context.channel,
                                            "invalid or nonexistent user supplied")
+            return
+        if not check_role_hierarchy(context.author, kick_member):
+            await self.client.send_message(context.channel,
+                                           "you do not have permission to kick this user")
             return
         await self.client.send_message(context.channel,
                                        "kicking {}...".format(kick_member.mention))
@@ -47,6 +55,10 @@ class Admin(servo.Servo):
             await self.client.send_message(context.channel,
                                            "invalid or nonexistent user supplied")
             return
+        if not check_role_hierarchy(context.author, ban_member):
+            await self.client.send_message(context.channel,
+                                           "you do not have permission to kick this user")
+            return
         await self.client.send_message(context.channel,
                                        "banning {}...".format(ban_member.mention))
         await self.client.ban(ban_member)
@@ -65,6 +77,11 @@ class Admin(servo.Servo):
         if not mute_member:
             await self.client.send_message(context.channel,
                                            "invalid or nonexistent user supplied")
+            return
+
+        if not check_role_hierarchy(context.author, mute_member):
+            await self.client.send_message(context.channel,
+                                           "you do not have permission to kick this user")
             return
 
         mute_role = None
@@ -131,6 +148,10 @@ class Admin(servo.Servo):
         if not mute_member:
             await self.client.send_message(context.channel,
                                            "invalid or nonexistent user supplied")
+            return
+        if not check_role_hierarchy(context.author, mute_member):
+            await self.client.send_message(context.channel,
+                                           "you do not have permission to mute this user")
             return
         overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = False
