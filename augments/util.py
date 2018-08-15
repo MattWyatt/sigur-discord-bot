@@ -17,7 +17,6 @@ def search_user(user, server):
     "author": "Saviour#8988"
 })
 class Util(servo.Servo):
-
     @servo.add_command({
         "name": "help",
         "aliases": ["h", "sos"],

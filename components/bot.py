@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import discord
+import asyncio
 from components import exceptions
 from components import component
 from components import subroutine
@@ -55,9 +56,9 @@ class Bot(component.Component):
                 await subroutine_obj.on_message(message)
 
         @self.client.event
-        async def on_message_deleted(message):
+        async def on_message_delete(message):
             for subroutine_obj in self.subroutines:
-                await subroutine_obj.on_message_deleted(message)
+                await subroutine_obj.on_message_delete(message)
 
         @self.client.event
         async def on_message_edit(before, after):
@@ -160,6 +161,7 @@ class Bot(component.Component):
                 await subroutine_obj.on_member_unban(server, user)
 
     def load_client(self, client=None):
+        asyncio.set_event_loop(asyncio.new_event_loop())
         if not client:
             self.set_client(discord.Client())
             return
@@ -235,4 +237,5 @@ class Bot(component.Component):
             self.logger.warn("duplicate subroutines in configuration file")
         except KeyError:
             self.logger.warn("no default subroutines supplied. skipping...")
+
         self.client.run(self.config["bot"]["token"])

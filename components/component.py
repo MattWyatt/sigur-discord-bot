@@ -11,8 +11,8 @@ class Component:
         self._config = None
 
         if inherit:
-            self._name = inherit.name
-            self._bot = inherit.bot
+            self.set_name(inherit.name)
+            self.set_bot(inherit.bot)
             self.set_client(inherit.client)
             self.set_database(inherit.database)
             self._logger = inherit.logger
@@ -20,6 +20,9 @@ class Component:
 
     def set_name(self, name):
         self._name = name
+
+    def set_bot(self, bot):
+        self._bot = bot
 
     def set_client(self, client):
         self._client = client

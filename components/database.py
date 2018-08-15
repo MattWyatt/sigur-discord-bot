@@ -65,3 +65,9 @@ class Database(component.Component):
             return self.cursor.fetchmany(amount)
         return self.cursor.fetchall()
 
+    def retrieve_all_from_table(self, table_name):
+        sql = "SELECT * FROM {}".format(table_name)
+        self.cursor.execute(sql)
+        self.connection.commit()
+        return self.cursor.fetchall()
+

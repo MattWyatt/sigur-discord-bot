@@ -52,7 +52,7 @@ class Subroutine(component.Component):
     async def on_message(self, message):
         pass
 
-    async def on_message_deleted(self, message):
+    async def on_message_delete(self, message):
         pass
 
     async def on_message_edit(self, before, after):
@@ -100,7 +100,7 @@ class Subroutine(component.Component):
     async def on_server_role_delete(self, role):
         pass
 
-    async def on_server_role_update(self, role):
+    async def on_server_role_update(self, before, after):
         pass
 
     async def on_server_emojis_update(self, before, after):
