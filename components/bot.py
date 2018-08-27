@@ -189,12 +189,15 @@ class Bot(component.Component):
                 logging.error("the specified configuration file is invalid")
                 raise exceptions.InvalidConfiguration
 
-        if self.config["bot"]["subroutines"]:
+        try:
             for subroutine_name in self.config["bot"]["subroutines"]:
                 try:
                     self.load_subroutine(subroutine_name)
                 except exceptions.SubroutineAlreadyLoaded:
                     pass
+        except KeyError:
+            self.logger.warning("no default subroutines exist")
+            pass
 
     def get_subroutine(self, subroutine_name):
         for subroutine_obj in self.subroutines:

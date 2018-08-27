@@ -11,6 +11,7 @@ class Database(component.Component):
 
         if self.in_memory:
             self.connection = sqlite3.connect(":memory:")
+            self.file_path = ":memory:"
         else:
             self.file_path = "./{}.db".format(self.name)
             if not os.path.exists(self.file_path):
