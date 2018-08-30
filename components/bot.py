@@ -231,14 +231,14 @@ class Bot(component.Component):
         self.load_event_handlers()
 
         if not self.database:
-            self.logger.warn("bot starting without db file, defaulting to memory")
+            self.logger.warning("bot starting without db file, defaulting to memory")
             self.set_database(database.Database(inherit=self, in_memory=True))
         try:
             for subroutine_name in self.config["bot"]["subroutines"]:
                 self.load_subroutine(subroutine_name)
         except exceptions.SubroutineAlreadyLoaded:
-            self.logger.warn("duplicate subroutines in configuration file")
+            self.logger.warning("duplicate subroutines in configuration file")
         except KeyError:
-            self.logger.warn("no default subroutines supplied. skipping...")
+            self.logger.warning("no default subroutines supplied. skipping...")
 
         self.client.run(self.config["bot"]["token"])

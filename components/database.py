@@ -10,7 +10,7 @@ class Database(component.Component):
         self.in_memory = in_memory
 
         if self.in_memory:
-            self.connection = sqlite3.connect(":memory:")
+            self.connection = sqlite3.connect(":memory:", check_same_thread=False)
             self.file_path = ":memory:"
         else:
             self.file_path = "./{}.db".format(self.name)
@@ -18,7 +18,7 @@ class Database(component.Component):
                 db = open(self.file_path, "w+")
                 db.close()
                 self.logger.debug("created database file {}".format(self.file_path))
-            self.connection = sqlite3.connect(self.file_path)
+            self.connection = sqlite3.connect(self.file_path, check_same_thread=False)
         self.cursor = self.connection.cursor()
 
     # function run without user input

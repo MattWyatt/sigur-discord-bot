@@ -62,3 +62,4 @@ fabric.properties
 # CUSTOM RULES #
 venv
 __pycache__
+tests/testconfig.json
